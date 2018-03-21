@@ -1,0 +1,96 @@
+\documentclass{article}
+\usepackage[a4paper, margin=3cm]{geometry}
+\usepackage[brazilian]{babel}
+\usepackage[utf8]{inputenc}
+
+\title{IA para o \textit{Gomoku} utilizando poda $\alpha$-$\beta$}
+\author{Matheus Silva P. Bittencourt \and Vinicius Macelai}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Modelo dos estados}
+
+Como é de se esperar, o jogo será modelado como um grafo para o uso do
+algoritmo minmax com poda $\alpha$-$\beta$. Os vértices desse grafo são
+possíveis tabuleiros do jogo, ou seja, uma matriz que representa onde as peças
+colocadas previamente estão. As arestas vão ser as jogadas, isto é, o ato de
+colocar uma peça no tabuleiro, que levará de um vértice (estado) a outro.
+
+\section{Heurística}
+
+Para a função de heurística, a ideia é identificar padrões no tabuleiro que
+levam a vitória, por exemplo, 4 peças seguidas (na horizontal, vertical ou
+diagonal) sem nenhuma peça do adversário nas laterais da sequência, leva a uma
+vitória automática. Em \cite{allis1993go}, são definido alguns padrões
+(classes) que indicam uma posição favorável ao jogador:
+
+\begin{enumerate}
+	\item \texttt{OXXXX\_}
+	\item \texttt{\_XXXX\_}
+	\item \texttt{\_XXX\_}
+	\item \texttt{O\_XXX\_\_}
+	\item \texttt{\_X\_XX\_}
+\end{enumerate}
+
+sendo que o ``\_'' representa uma casa vazia e um possível movimento de defesa
+do adversário. Todas as situações acima, são situações em que o adversário
+precisa fazer um movimento de defesa (se for a vez dele) ou ele perderá, e na
+situação 2 o jogo já está ganho. Um tabuleiro que possua duas das situações
+acima garante a vitória, visto que o adversário teria que defender as duas,
+porém só tem uma jogada, no melhor caso.
+
+Para refinar mais a função de heurística, julgamos que é necessário também
+considerar situações prévias as acima, que são mais fáceis de alcançar, como a
+situação \texttt{\_XX\_} (situação 6). Entretanto, uma situação como essa deve
+valer consideravelmente menos que as acima, já que é preferível ter a situação
+3, por exemplo, do que o tabuleiro cheio de situações 6.
+
+Visto que o tabuleiro possui dimensão $15\times15$ ($225$ casas) e que no
+máximo ocuparemos a metade dele (113 casas), isso possibilitará que sejam
+formadas no máximo 56 duplas, ou 37 triplas. Dando valores numéricos as
+situações, a situação 6 pode valer 1 ponto toda vez que for encontrada, assim,
+as situações mencionadas acima devem valer no mínimo 56 pontos, já que uma
+tripla, por exemplo, deve valer mais que o tabuleiro cheio de duplas. Já a
+situação 2, deve valer $56 \times 37$, novamente, devido ao fato de que um
+tabuleiro com uma quadrupla deve valer mais que um tabuleiro cheio de triplas.
+Uma possível fórmula para a heurística, apenas considerando as peças do PC,
+seria:
+
+$$h(x) = s_2 \cdot 56 \cdot 37 + (s_1 + s_3 + s_4 + s_5) \cdot 56 + s_6$$
+
+sendo que $s_n$ é o número de ocorrências da situação $n$. O valor também deve
+ser computado para o adversário e subtraído. Talvez seja necessário considerar
+o número de jogadas para o valor da heurística, sendo que com menos jogadas o
+valor deve ser maior.
+
+\section{Utilidade}
+
+A função de utilidade deve levar em conta as situações de vitória, e usar a
+função de heurística para refinar as diferentes situações de vitória, por
+exemplo, uma vitória em que as chances eram maiores deve ter um valor de
+utilidade maior, diferente de uma vitória ``apertada''. Além disso, qualquer
+vitória deve ter um valor de utilidade maior que o maior valor possível para a
+heurística. Podemos escrever a função de utilidade como:
+
+$$u_v(x) = v + h(x)$$
+
+sendo que $v$ seja suficientemente grande para que uma vitória possua sempre um
+valor maior que qualquer outro tabuleiro. Numa situação de derrota, podemos
+apenas inverter o valor de $m$: $u_d(x) = - v + h(x)$.
+
+\section{Otimizações planejadas}
+
+Para aproveitar melhor as podas, e fazer com que elas aconteçam mais
+frequentemente, vamos sempre começar a buscar e construir o grafo de jogadas a
+partir das casas vizinhas as peças já posicionadas pelo PC, visto que colocar
+peças nessas posições vai aumentar a função de heurística, fazendo com que as
+podas ocorram mais frequentemente, especialmente quando a busca alcançar as
+posições menos favoráveis.
+
+\bibliographystyle{plain}
+\bibliography{relatorio-1}
+
+\end{document}
