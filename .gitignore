@@ -21,3 +21,11 @@
 *.run.xml
 
 docs/relatorio-1.pdf
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# mypy
+.mypy_cache/
