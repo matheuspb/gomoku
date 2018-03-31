@@ -7,6 +7,27 @@ SIZE = 15
 P1_VICTORY_PATTERN = re.compile(r"11111")
 P2_VICTORY_PATTERN = re.compile(r"22222")
 
+PATTERN_1 = re.compile(r"211110|011112")
+PATTERN_2 = re.compile(r"011110")
+PATTERN_3 = re.compile(r"01110")
+PATTERN_4 = re.compile(r"2011100|0011102")
+PATTERN_5 = re.compile(r"010110|011010")
+PATTERN_6 = re.compile(r"0110|0110")
+
+ADV_PATTERN_1 = re.compile(r"122220|022221")
+ADV_PATTERN_2 = re.compile(r"022220")
+ADV_PATTERN_3 = re.compile(r"02220")
+ADV_PATTERN_4 = re.compile(r"1022200|0022201")
+ADV_PATTERN_5 = re.compile(r"020220|022020")
+ADV_PATTERN_6 = re.compile(r"0220")
+
+
+def stringfy(matrix: List[List[int]]) -> str:
+    string = ""
+    for line in matrix:
+        string += "".join(map(str, line)) + "\n"
+    return string
+
 
 class Board():
     """ A gomoku board, i.e., a state of the game. """
@@ -59,13 +80,6 @@ class Board():
                 for j in range(SIZE)]
 
     def victory(self) -> bool:
-
-        def stringfy(matrix: List[List[int]]) -> str:
-            string = ""
-            for line in matrix:
-                string += "".join(map(str, line)) + "\n"
-            return string
-
         whole_board = "\n".join(
             map(stringfy,
                 [self._board,
@@ -75,3 +89,35 @@ class Board():
 
         return True if P1_VICTORY_PATTERN.search(whole_board) or \
             P2_VICTORY_PATTERN.search(whole_board) else False
+
+    def evaluate(self) -> int:
+        """ Returns an heuristic value of the current board. """
+
+        whole_board = "\n".join(
+            map(stringfy,
+                [self._board,
+                 self._diagonals(),
+                 self._antidiagonals(),
+                 self._columns()]))
+
+        value = 0
+        if P1_VICTORY_PATTERN.search(whole_board):
+            value += 2**32
+        elif P2_VICTORY_PATTERN.search(whole_board):
+            value -= 2**32
+
+        value += 37 * 56 * len(PATTERN_2.findall(whole_board))
+        value += 56 * len(PATTERN_1.findall(whole_board))
+        value += 56 * len(PATTERN_3.findall(whole_board))
+        value += 56 * len(PATTERN_4.findall(whole_board))
+        value += 56 * len(PATTERN_5.findall(whole_board))
+        value += len(PATTERN_6.findall(whole_board))
+
+        value -= 37 * 56 * len(ADV_PATTERN_2.findall(whole_board))
+        value -= 56 * len(ADV_PATTERN_1.findall(whole_board))
+        value -= 56 * len(ADV_PATTERN_3.findall(whole_board))
+        value -= 56 * len(ADV_PATTERN_4.findall(whole_board))
+        value -= 56 * len(ADV_PATTERN_5.findall(whole_board))
+        value -= len(ADV_PATTERN_6.findall(whole_board))
+
+        return value
