@@ -1,6 +1,7 @@
 import re
 import os
-from typing import List, Tuple
+import copy
+from typing import Any, Iterable, List, Tuple
 
 
 SIZE = 15
@@ -32,9 +33,12 @@ def stringfy(matrix: List[List[int]]) -> str:
 class Board():
     """ A gomoku board, i.e., a state of the game. """
 
-    def __init__(self):
+    stones = {0: ' ', 1: '●', 2: '○'}
+
+    def __init__(self, ai_player: int) -> None:
         self._board = [[0 for _ in range(SIZE)] for _ in range(SIZE)]
-        self.stones = {0: ' ', 1: '●', 2: '○'}
+        self._actual_player = 1
+        self._ai_player = ai_player
 
     def __str__(self) -> str:
         """
@@ -52,13 +56,14 @@ class Board():
 
         for row, i in zip(self._board, range(len(self._board))):
             mid_rows += '{:02d} ┃ '.format(i + 1) + ' '.join(
-                self.stones[i] for i in row) + ' ┃\n'
+                Board.stones[i] for i in row) + ' ┃\n'
 
         return letter_row + top_row + mid_rows + bottom_row
 
-    def place_stone(self, player: int, position: Tuple[int, int]) -> None:
+    def place_stone(self, position: Tuple[int, int]) -> None:
         x_coord, y_coord = position
-        self._board[y_coord][x_coord] = player
+        self._board[y_coord][x_coord] = self._actual_player
+        self._actual_player = 1 if self._actual_player == 2 else 2
 
     def is_empty(self, position: Tuple[int, int]) -> bool:
         x_coord, y_coord = position
@@ -100,24 +105,35 @@ class Board():
                  self._antidiagonals(),
                  self._columns()]))
 
-        value = 0
+        p1_value = 0
+        p2_value = 0
         if P1_VICTORY_PATTERN.search(whole_board):
-            value += 2**32
+            p1_value += 2**35
         elif P2_VICTORY_PATTERN.search(whole_board):
-            value -= 2**32
+            p2_value += 2**35
 
-        value += 37 * 56 * len(PATTERN_2.findall(whole_board))
-        value += 56 * len(PATTERN_1.findall(whole_board))
-        value += 56 * len(PATTERN_3.findall(whole_board))
-        value += 56 * len(PATTERN_4.findall(whole_board))
-        value += 56 * len(PATTERN_5.findall(whole_board))
-        value += len(PATTERN_6.findall(whole_board))
+        p1_value += 37 * 56 * len(PATTERN_2.findall(whole_board))
+        p1_value += 56 * len(PATTERN_1.findall(whole_board))
+        p1_value += 56 * len(PATTERN_3.findall(whole_board))
+        p1_value += 56 * len(PATTERN_4.findall(whole_board))
+        p1_value += 56 * len(PATTERN_5.findall(whole_board))
+        p1_value += len(PATTERN_6.findall(whole_board))
 
-        value -= 37 * 56 * len(ADV_PATTERN_2.findall(whole_board))
-        value -= 56 * len(ADV_PATTERN_1.findall(whole_board))
-        value -= 56 * len(ADV_PATTERN_3.findall(whole_board))
-        value -= 56 * len(ADV_PATTERN_4.findall(whole_board))
-        value -= 56 * len(ADV_PATTERN_5.findall(whole_board))
-        value -= len(ADV_PATTERN_6.findall(whole_board))
+        p2_value += 37 * 56 * len(ADV_PATTERN_2.findall(whole_board))
+        p2_value += 56 * len(ADV_PATTERN_1.findall(whole_board))
+        p2_value += 56 * len(ADV_PATTERN_3.findall(whole_board))
+        p2_value += 56 * len(ADV_PATTERN_4.findall(whole_board))
+        p2_value += 56 * len(ADV_PATTERN_5.findall(whole_board))
+        p2_value += len(ADV_PATTERN_6.findall(whole_board))
 
-        return value
+        return p1_value - p2_value \
+            if self._ai_player == 1 \
+            else p2_value - p1_value
+
+    def adjacents(self) -> Iterable[Any]:
+        for i in [7, 8, 6, 9, 5, 10, 4, 11, 3, 12, 2, 13, 1, 14, 0]:
+            for j in [7, 8, 6, 9, 5, 10, 4, 11, 3, 12, 2, 13, 1, 14, 0]:
+                actual_board = copy.deepcopy(self)
+                if actual_board.is_empty((i, j)):
+                    actual_board.place_stone((i, j))
+                    yield actual_board

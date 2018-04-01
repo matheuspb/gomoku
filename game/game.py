@@ -1,19 +1,25 @@
 import re
 from typing import Tuple
 from game.board import Board
+from ab_pruning import ab_pruning
 
 
 class Game():
 
-    def __init__(self):
-        self._board = Board()
+    def __init__(self, ai_player: int = 1) -> None:
+        self._board = Board(ai_player)
         self._turn = 0
+        self._ai_player = ai_player
 
     def play(self) -> None:
         while not self._board.victory():
             print(self._board)
-            pos = self._player_input()
-            self._board.place_stone(self._turn % 2 + 1, pos)
+            if (self._turn % 2) + 1 == self._ai_player:
+                self._board, _ = \
+                    ab_pruning(self._board, 2, -2**32, 2**32, True)
+            else:
+                pos = self._player_input()
+                self._board.place_stone(pos)
             self._turn += 1
         print(self._board)
 
@@ -27,11 +33,11 @@ class Game():
         """
         while True:
             raw = input("   Place {} on which coordinate? ".format(
-                self._board.stones[self._turn % 2 + 1]))
+                Board.stones[self._turn % 2 + 1]))
 
             raw = raw.upper() if raw else 'error'
 
-            if re.match(r'Q[UIT]?', raw):
+            if re.match(r'Q(UIT)?', raw):
                 raise SystemExit
 
             if raw[-1] in map(chr, range(65, 80)):
