@@ -35,10 +35,12 @@ class Board():
 
     stones = {0: ' ', 1: '●', 2: '○'}
 
+
     def __init__(self, ai_player: int) -> None:
         self._board = [[0 for _ in range(SIZE)] for _ in range(SIZE)]
         self._actual_player = 1
         self._ai_player = ai_player
+        self._last_play = []
 
     def __str__(self) -> str:
         """
@@ -56,12 +58,13 @@ class Board():
 
         for row, i in zip(self._board, range(len(self._board))):
             mid_rows += '{:02d} ┃ '.format(i + 1) + ' '.join(
-                Board.stones[i] for i in row) + ' ┃\n'
+                Board.stones[i] for i in row) + ' ┃ {:02d}\n'.format(i + 1)
 
-        return letter_row + top_row + mid_rows + bottom_row
+        return letter_row + top_row + mid_rows + bottom_row + '\n' + letter_row
 
     def place_stone(self, position: Tuple[int, int]) -> None:
         x_coord, y_coord = position
+        self._last_play = [chr(x_coord + 65), y_coord + 1]
         self._board[y_coord][x_coord] = self._actual_player
         self._actual_player = 1 if self._actual_player == 2 else 2
 
