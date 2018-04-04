@@ -23,6 +23,27 @@ ADV_PATTERN_5 = re.compile(r"020220|022020")
 ADV_PATTERN_6 = re.compile(r"0220")
 
 
+def spiral(n):
+    dx, dy = 1, 0            # Starting increments
+    x, y = 0, 0              # Starting location
+    myarray = [[None]*n for _ in range(n)]
+    for i in range(n**2):
+        myarray[x][y] = i
+        nx, ny = x + dx, y + dy
+        if 0 <= nx < n and 0 <= ny < n and myarray[nx][ny] == None:
+            x, y = nx, ny
+        else:
+            dx, dy = -dy, dx
+            x,y = x + dx, y + dy
+    outputarray = [None for _ in range(n**2)]
+    for i in range(n):
+        for j in range(n):
+            outputarray[myarray[i][j]] = (i, j)
+    return outputarray
+
+SPIRAL_ORDER = spiral(SIZE)[::-1]
+
+
 def stringfy(matrix: List[List[int]]) -> str:
     string = ""
     for line in matrix:
@@ -134,9 +155,11 @@ class Board():
             else p2_value - p1_value
 
     def adjacents(self) -> Iterable[Any]:
-        for i in [7, 8, 6, 9, 5, 10, 4, 11, 3, 12, 2, 13, 1, 14, 0]:
-            for j in [7, 8, 6, 9, 5, 10, 4, 11, 3, 12, 2, 13, 1, 14, 0]:
-                actual_board = copy.deepcopy(self)
-                if actual_board.is_empty((i, j)):
-                    actual_board.place_stone((i, j))
-                    yield actual_board
+        actual_board = copy.deepcopy(self)
+        for i, j in SPIRAL_ORDER:
+            if actual_board.is_empty((i, j)):
+                actual_board.place_stone((i, j))
+                yield actual_board
+                actual_board._actual_player = \
+                    1 if actual_board._actual_player == 2 else 2
+                actual_board._board[j][i] = 0

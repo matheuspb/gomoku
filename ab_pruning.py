@@ -1,3 +1,4 @@
+import copy
 from typing import Tuple
 from game.board import Board
 
@@ -14,7 +15,7 @@ def ab_pruning(
             _, node_value = ab_pruning(child, depth - 1, alpha, beta, False)
             if node_value > value:
                 value = node_value
-                next_board = child
+                next_board = copy.deepcopy(child)
             alpha = max(alpha, value)
             if beta <= alpha:
                 break
@@ -25,7 +26,7 @@ def ab_pruning(
             _, node_value = ab_pruning(child, depth - 1, alpha, beta, True)
             if node_value < value:
                 value = node_value
-                next_board = child
+                next_board = copy.deepcopy(child)
             beta = min(beta, value)
             if beta <= alpha:
                 break
