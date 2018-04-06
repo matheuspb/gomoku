@@ -24,6 +24,19 @@ class Game():
             self._turn += 1
         print(self._board)
 
+    def play_ia_vs_ia(self) -> None:
+        while not self._board.victory():
+            print(self._board)
+            print("   Last play: {}{}".format(*self._board.last_play))
+            if (self._turn % 2) + 1 == self._ai_player:
+                self._board, _ = \
+                    ab_pruning(self._board, 2, -2**32, 2**32, True)
+            else:
+                self._board, _ = \
+                    ab_pruning(self._board, 2, -2**32, 2**32, False)
+            self._turn += 1
+        print(self._board)
+
     def _player_input(self) -> Tuple[int, int]:
         """
         Input loop for the game. Matches valid coordinates on the board.
