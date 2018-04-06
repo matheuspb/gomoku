@@ -1,5 +1,4 @@
 from game.game import Game
-from game.board import SPIRAL_ORDER
 
 
 def main() -> None:

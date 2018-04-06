@@ -14,7 +14,7 @@ class Game():
     def play(self) -> None:
         while not self._board.victory():
             print(self._board)
-            print("   Last play: {}".format("".join(i.__class__==str and i or str(i) for i in self._board._last_play)))
+            print("   Last play: {}{}".format(*self._board.last_play))
             if (self._turn % 2) + 1 == self._ai_player:
                 self._board, _ = \
                     ab_pruning(self._board, 2, -2**32, 2**32, True)

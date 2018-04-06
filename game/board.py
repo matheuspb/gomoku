@@ -23,23 +23,27 @@ ADV_PATTERN_5 = re.compile(r"020220|022020")
 ADV_PATTERN_6 = re.compile(r"0220")
 
 
-def spiral(n):
-    dx, dy = 1, 0            # Starting increments
-    x, y = 0, 0              # Starting location
-    myarray = [[None]*n for _ in range(n)]
+def spiral(n: int) -> List[Tuple[int, int]]:
+    """
+    Returns a list of coordinates to iterate a matrix of size n*n in spiral
+    (outside in) order.
+    """
+    dx, dy = 1, 0  # Starting increments
+    x, y = 0, 0    # Starting location
+    matrix = [[-1]*n for _ in range(n)]
     for i in range(n**2):
-        myarray[x][y] = i
+        matrix[x][y] = i
         nx, ny = x + dx, y + dy
-        if 0 <= nx < n and 0 <= ny < n and myarray[nx][ny] == None:
+        if 0 <= nx < n and 0 <= ny < n and matrix[nx][ny] == -1:
             x, y = nx, ny
         else:
             dx, dy = -dy, dx
-            x,y = x + dx, y + dy
-    outputarray = [None for _ in range(n**2)]
+            x, y = x + dx, y + dy
+    output = [(0, 0) for _ in range(n**2)]
     for i in range(n):
         for j in range(n):
-            outputarray[myarray[i][j]] = (i, j)
-    return outputarray
+            output[matrix[i][j]] = (i, j)
+    return output
 
 SPIRAL_ORDER = spiral(SIZE)[::-1]
 
@@ -56,12 +60,11 @@ class Board():
 
     stones = {0: ' ', 1: '●', 2: '○'}
 
-
     def __init__(self, ai_player: int) -> None:
         self._board = [[0 for _ in range(SIZE)] for _ in range(SIZE)]
         self._actual_player = 1
         self._ai_player = ai_player
-        self._last_play = []
+        self._last_play: Tuple[str, int] = ('', 0)
 
     def __str__(self) -> str:
         """
@@ -85,13 +88,17 @@ class Board():
 
     def place_stone(self, position: Tuple[int, int]) -> None:
         x_coord, y_coord = position
-        self._last_play = [chr(x_coord + 65), y_coord + 1]
+        self._last_play = (chr(x_coord + 65), y_coord + 1)
         self._board[y_coord][x_coord] = self._actual_player
         self._actual_player = 1 if self._actual_player == 2 else 2
 
     def is_empty(self, position: Tuple[int, int]) -> bool:
         x_coord, y_coord = position
         return self._board[y_coord][x_coord] == 0
+
+    @property
+    def last_play(self) -> Tuple[str, int]:
+        return self._last_play
 
     def _diagonals(self) -> List[List[int]]:
         return [[self._board[SIZE - p + q - 1][q]
@@ -132,9 +139,9 @@ class Board():
         p1_value = 0
         p2_value = 0
         if P1_VICTORY_PATTERN.search(whole_board):
-            p1_value += 2**35
+            p1_value += 2**25
         elif P2_VICTORY_PATTERN.search(whole_board):
-            p2_value += 2**35
+            p2_value += 2**25
 
         p1_value += 37 * 56 * len(PATTERN_2.findall(whole_board))
         p1_value += 56 * len(PATTERN_1.findall(whole_board))
