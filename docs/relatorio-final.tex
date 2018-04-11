@@ -1,0 +1,109 @@
+\documentclass{article}
+\usepackage[a4paper, margin=3cm]{geometry}
+\usepackage[brazilian]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{indentfirst, hyperref}
+
+\title{IA para o \textit{Gomoku} utilizando poda $\alpha$-$\beta$}
+\author{Matheus Silva P. Bittencourt \and Vinicius Macelai}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Decisões de Projeto}
+
+Foi utilizado uma implementação do jogo Gomoku disponível em
+\href{https://github.com/zambonin/multivac/tree/master/gomoku}{github.com/zambonin/multivac},
+com algumas melhoria em sua interface. Para executar o jogo basta executar o
+arquivo \texttt{main.py} com o comando \texttt{\$ python main.py}.
+
+\begin{itemize}
+
+	\item \textbf{Organização do projeto}
+		\begin{itemize}
+
+			\item \texttt{game/game.py} controla a parte de acesso aos modos de
+			jogo e validade das entradas, bem como todo o fluxo de controle,
+			comunicando-se com o tabuleiro e chamando métodos necessários para
+			que jogadores humanos e artificial possam realizar suas ações no
+			jogo.
+
+			\item \texttt{game/board.py} realiza a implementação de um
+			tabuleiro para um jogo de \textit{gomoku}, junto com seus métodos
+			para a integração com o algoritmo de busca de decisão, usando
+			recursos da linguagem escolhida, tais como \textit{list
+			comprehensions e generators}. É nessa classe que é implementada a
+			função de heurística/utilidade.
+
+			\item \texttt{ab\_prunning.py} é responsável por construir árvores
+			de jogadas recursivamente de forma dinâmica e implícita, dado o
+			tabuleiro atual, e de acordo com a profundidade desejada, decidir
+			qual será a melhor jogada possível respeitando a função de
+			heurística/utilidade.
+
+		\end{itemize}
+
+	\item \textbf{Detecção de fim de jogo e sequências}
+		A detecção de fim de jogo é feita a partir do método \texttt{victory},
+		que percorre toda a matriz transformada em string do tabuleiro
+		procurando por quíntuplas do mesmo jogador. Após cada jogada, essa
+		verificação é aplicada. De modo similar, sequências são verificadas com
+		expressões regulares.
+
+	\item \textbf{Principais métodos}
+		\begin{itemize}
+
+			\item \texttt{ab\_pruning:} implementa o algoritmo minimax com
+			poda.
+
+			\item \texttt{evaluate:} calcula o valor de heurística ou utilidade
+			da configuração atual do tabuleiro.
+
+			\item \texttt{adjacents:} utiliza de um gerador para fornecer todos
+			os estados do tabuleiro.
+
+		\end{itemize}
+
+\end{itemize}
+
+\section{Limitações}
+
+O software responde bem ao descer 2 níveis, com tempo de resposta em torno de
+segundos, já aumentado para 3 níveis o tempo de resposta aumenta para cerca de
+35 segundos. O gargalo do algoritmo apresenta-se na função \texttt{evaluate},
+pois é necessário buscar todos os padrões com regex, que é uma operação
+custosa.
+
+Além disso, acabamos não implementando uma das otimizações planejadas, que era
+começar a busca de jogadas, por jogadas ao redor das peças já existentes do PC.
+Ainda assim implementamos uma maneira de otimizar as podas, realizando a busca
+em espiral pelo tabuleiro, ou seja, primeiro o algoritmo analisa jogadas
+válidas no centro do tabuleiro e depois nas bordas. Essa otimização pode ser
+vista no método \texttt{adjacents} da classe \texttt{Board}.
+
+\section{Implementação da função de heurística/utilidade}
+
+As funções de heurística e utilidade, foram implementadas no mesmo método
+(\texttt{Board.evaluate}) com o uso do módulo \texttt{re} da linguagem Python,
+que implementa algumas utilidades para reconhecimento de \textit{strings}
+utilizando expressões regulares. Optamos por essa solução, visto que, a nossa
+função de heurística consistia basicamente em encontrar padrões no tabuleiro do
+jogo, como descrito no primeiro relatório.
+
+No arquivo \texttt{game/board.py} podemos encontrar as expressões regulares
+utilizadas para encontrar uma situação de vitória no tabuleiro, e também, as
+situações que contribuem para o valor da heurística. Utilizando estas
+expressões, podemos contar quantas vezes cada situação ocorre no tabuleiro e
+por sua vez calcular o valor de heurística.
+
+Para isso, ocorre um pré-processamento da matriz, que representa o tabuleiro,
+transformando ela em uma \textit{string} onde cada linha corresponde a uma
+linha da matriz. Claro que não podemos analisar somente a matriz da maneira
+como a vemos na interface gráfica, para isso, os métodos \texttt{\_columns,
+\_diagonals, \_antidiagonals} foram implementados, que no caso retornam a
+matriz do tabuleiro ``rotacionado'', possibilitando o reconhecimento das
+situações, além das linhas, nas colunas e diagonais.
+
+\end{document}
